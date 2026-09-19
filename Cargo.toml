@@ -1,0 +1,30 @@
+[package]
+name = "lmclus"
+version = "0.1.0"
+edition = "2024"
+authors = ["Vishal Bharti"]
+description = "High-performance Linear Manifold Clustering (LMCLUS) engine in Rust"
+readme = "README.md"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/vishalbharti/lmclus"
+keywords = ["clustering", "manifold-learning", "unsupervised-learning", "subspace", "pca"]
+categories = ["algorithms", "science", "mathematics"]
+
+[dependencies]
+faer = "0.24.4"
+rand = "0.10.2"
+rayon = "1.12.0"
+
+[[bin]]
+name = "lmclus"
+path = "src/bin/lmclus.rs"
+
+[[example]]
+name = "microbench"
+path = "examples/microbench.rs"
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+panic = "abort"
