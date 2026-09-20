@@ -6,17 +6,102 @@ use std::time::Instant;
 
 use lmclus::{lmclus, Parameters};
 
+fn print_help() {
+    println!(r#"Linear Manifold Clustering (LMCLUS) Engine
+
+USAGE:
+    lmclus <csv_path> <max_dim> [k_nominal] [seed] [out_labels_bin]
+    lmclus --help | -h
+    lmclus --version | -v
+
+ARGUMENTS:
+    <csv_path>
+        Path to the input CSV file containing data points.
+        Format: Each line represents a point with comma-separated feature values.
+        If the last column contains integer labels, it is used as ground-truth
+        for calculating Normalized Mutual Information (NMI).
+
+    <max_dim>
+        Maximum subspace manifold dimension to search (must be >= 1 and < d).
+        For example:
+          1: search for 1D lines
+          2: search for 1D lines and 2D planes
+          3: search for 1D lines, 2D planes, and 3D hyperplanes
+
+    [k_nominal]
+        Nominal / expected number of clusters in the dataset (default: 4).
+        Used by the stochastic sampling heuristic to size the number of random
+        trials needed to find candidate manifolds with high probability.
+
+    [seed]
+        64-bit unsigned integer random seed (default: 42).
+        Guarantees deterministic and reproducible trial generation across runs.
+
+    [out_labels_bin]
+        Optional output file path to write predicted point cluster assignments.
+        Format: Raw little-endian binary array of 64-bit integers (i64).
+        Points assigned to cluster 0 have label 0, cluster 1 have label 1, etc.
+        Unclustered noise points have label -1.
+        Can be read directly in Python via:
+            np.fromfile("labels.bin", dtype=np.int64)
+        Or in Julia via:
+            reinterpret(Int64, read("labels.bin"))
+
+OPTIONS:
+    -h, --help
+        Print this detailed help guide and exit.
+
+    -v, --version
+        Print version information and exit.
+
+EXAMPLES:
+    # Cluster points with maximum manifold dimension of 2:
+    lmclus data.csv 2
+
+    # Cluster expecting ~5 clusters, using random seed 1234:
+    lmclus data.csv 3 5 1234
+
+    # Cluster and export point assignments to binary file:
+    lmclus data.csv 2 4 42 predicted_labels.bin
+"#);
+}
+
 fn main() {
     let args: Vec<String> = env::args().collect();
+
+    if args.iter().any(|arg| arg == "--help" || arg == "-h") {
+        print_help();
+        return;
+    }
+
+    if args.iter().any(|arg| arg == "--version" || arg == "-v") {
+        println!("lmclus {}", env!("CARGO_PKG_VERSION"));
+        return;
+    }
+
     if args.len() < 3 {
-        eprintln!("Usage: lmclus <csv_path> <max_dim> [k_nominal] [seed] [out_labels_bin]");
+        print_help();
         std::process::exit(1);
     }
 
     let csv_path = &args[1];
-    let max_dim: usize = args[2].parse().expect("max_dim must be positive int");
-    let _k_nominal: usize = if args.len() >= 4 { args[3].parse().unwrap_or(4) } else { 4 };
-    let seed: u64 = if args.len() >= 5 { args[4].parse().unwrap_or(42) } else { 42 };
+    let max_dim: usize = match args[2].parse() {
+        Ok(m) if m > 0 => m,
+        _ => {
+            eprintln!("Error: <max_dim> must be a positive integer (got '{}')", args[2]);
+            std::process::exit(1);
+        }
+    };
+    let k_nominal: usize = if args.len() >= 4 {
+        args[3].parse().unwrap_or(4)
+    } else {
+        4
+    };
+    let seed: u64 = if args.len() >= 5 {
+        args[4].parse().unwrap_or(42)
+    } else {
+        42
+    };
     let out_bin = if args.len() >= 6 { Some(&args[5]) } else { None };
 
     if !Path::new(csv_path).exists() {
@@ -67,6 +152,7 @@ fn main() {
 
     // 3. Setup Parameters
     let mut p = Parameters::new(max_dim);
+    p.number_of_clusters = k_nominal;
     p.random_seed = seed;
 
     // 4. Execution run
