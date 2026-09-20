@@ -102,13 +102,10 @@ Outputs JSON telemetry:
   "d": 10,
   "elapsed_time": 0.0155,
   "nclusters": 3,
-  "counts": [6667, 6667, 6666],
-  "nmi": null,
-  "ari": null,
-  "purity": null
+  "counts": [6667, 6667, 6666]
 }
 ```
-*(When `--has-labels` is passed, `"nmi"`, `"ari"`, and `"purity"` will report the respective external validation scores).*
+*(When `--has-labels` is passed, `"nmi"`, `"ari"`, and `"purity"` are automatically computed and included in the output).*
 
 ---
 

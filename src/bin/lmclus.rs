@@ -209,16 +209,14 @@ fn main() {
     println!("  \"d\": {d},");
     println!("  \"elapsed_time\": {elapsed:.6},");
     println!("  \"nclusters\": {k_found},");
-    println!("  \"counts\": {:?},", counts);
     if has_labels {
         let m = compute_metrics(&ground_truth, &assigns);
+        println!("  \"counts\": {:?},", counts);
         println!("  \"nmi\": {:.4},", m.nmi);
         println!("  \"ari\": {:.4},", m.ari);
         println!("  \"purity\": {:.4}", m.purity);
     } else {
-        println!("  \"nmi\": null,");
-        println!("  \"ari\": null,");
-        println!("  \"purity\": null");
+        println!("  \"counts\": {:?}", counts);
     }
     println!("}}");
 }
