@@ -6,8 +6,8 @@ authors = ["Vishal Bharti"]
 description = "High-performance Linear Manifold Clustering (LMCLUS) engine in Rust"
 readme = "README.md"
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/vishalbharti/lmclus"
-keywords = ["clustering", "manifold-learning", "unsupervised-learning", "subspace", "pca"]
+repository = "https://github.com/vishalbharti1990/lmclus"
+keywords = ["clustering", "manifold-learning", "unsupervised", "subspace", "pca"]
 categories = ["algorithms", "science", "mathematics"]
 exclude = [
     "/docs",
