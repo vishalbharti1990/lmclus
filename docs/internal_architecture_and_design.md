@@ -179,7 +179,7 @@ To ensure internal maintainer documentation (`docs/`), benchmarks, and test fixt
 ```toml
 [package]
 name = "lmclus"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 authors = ["Vishal Bharti"]
 description = "High-performance Linear Manifold Clustering (LMCLUS) engine in Rust"
