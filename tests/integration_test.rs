@@ -84,3 +84,57 @@ fn test_synthetic_two_clusters() {
     let counts = res.counts();
     assert_eq!(counts.iter().sum::<usize>(), n);
 }
+
+#[test]
+fn test_labeled_csv_dataset() {
+    let csv_content = include_str!("../data/sample_labeled.csv");
+    let mut rows: Vec<Vec<f64>> = Vec::new();
+    let mut ground_truth: Vec<i64> = Vec::new();
+
+    for line in csv_content.lines() {
+        let trimmed = line.trim();
+        if trimmed.is_empty() { continue; }
+        let parts: Vec<&str> = trimmed.split(',').collect();
+        if parts.len() < 2 { continue; }
+        let label: i64 = parts.last().unwrap().trim().parse::<f64>().unwrap() as i64;
+        let feats: Vec<f64> = parts[..parts.len() - 1].iter().map(|s| s.trim().parse::<f64>().unwrap()).collect();
+        ground_truth.push(label);
+        rows.push(feats);
+    }
+
+    let n = rows.len();
+    assert_eq!(n, 300);
+    let d = rows[0].len();
+    assert_eq!(d, 5);
+
+    let mut x = vec![0.0; d * n];
+    for (i, row) in rows.iter().enumerate() {
+        for (j, &val) in row.iter().enumerate() {
+            x[i * d + j] = val;
+        }
+    }
+
+    let mut p = Parameters::new(2);
+    p.number_of_clusters = 3;
+    p.random_seed = 42;
+    p.basis_alignment = true;
+
+    let res = lmclus(&x, d, n, &p);
+    assert_eq!(res.nclusters(), 3);
+    for count in res.counts() {
+        assert_eq!(count, 100);
+    }
+
+    let assigns = res.assignments(n);
+    let c0_label = assigns[0];
+    let c1_label = assigns[100];
+    let c2_label = assigns[200];
+
+    assert_ne!(c0_label, c1_label);
+    assert_ne!(c1_label, c2_label);
+    assert_ne!(c0_label, c2_label);
+
+    assert!(assigns[0..100].iter().all(|&l| l == c0_label));
+    assert!(assigns[100..200].iter().all(|&l| l == c1_label));
+    assert!(assigns[200..300].iter().all(|&l| l == c2_label));
+}
