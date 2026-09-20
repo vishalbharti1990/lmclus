@@ -97,8 +97,7 @@ Outputs JSON telemetry:
   "dataset": "dataset.csv",
   "n": 20000,
   "d": 10,
-  "min_time": 0.0148,
-  "mean_time": 0.0155,
+  "elapsed_time": 0.0155,
   "nclusters": 3,
   "counts": [6667, 6667, 6666],
   "nmi": 1.0000

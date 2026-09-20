@@ -9,7 +9,7 @@ use lmclus::{lmclus, Parameters};
 fn main() {
     let args: Vec<String> = env::args().collect();
     if args.len() < 3 {
-        eprintln!("Usage: lmclus_cli <csv_path> <max_dim> [k] [seed] [out_labels_bin]");
+        eprintln!("Usage: lmclus <csv_path> <max_dim> [k_nominal] [seed] [out_labels_bin]");
         std::process::exit(1);
     }
 
@@ -65,38 +65,22 @@ fn main() {
         }
     }
 
-    // 3. Setup Parameters matching Julia and Python benchmark configurations
+    // 3. Setup Parameters
     let mut p = Parameters::new(max_dim);
     p.random_seed = seed;
 
-    // 4. Warmup run
-    let _ = lmclus(&x, d, n, &p);
-
-    // 5. Timed runs
-    let repeats = 5;
-    let mut times = Vec::new();
-    let mut last_res = None;
-
-    for _ in 0..repeats {
-        let t0 = Instant::now();
-        let res = lmclus(&x, d, n, &p);
-        let elapsed = t0.elapsed().as_secs_f64();
-        times.push(elapsed);
-        last_res = Some(res);
-    }
-
-    let res = last_res.unwrap();
-    let min_time = times.iter().copied().fold(f64::INFINITY, f64::min);
-    let mean_time: f64 = times.iter().sum::<f64>() / (repeats as f64);
+    // 4. Execution run
+    let t0 = Instant::now();
+    let res = lmclus(&x, d, n, &p);
+    let elapsed = t0.elapsed().as_secs_f64();
     let k_found = res.nclusters();
     let counts = res.counts();
 
     let assigns = res.assignments(n);
     let nmi = compute_nmi(&ground_truth, &assigns);
 
-    // 6. Output assignments if requested
+    // 5. Output assignments if requested
     if let Some(out_path) = out_bin {
-        // Write as binary i64 array for exact parity with Julia/Python benchmark metrics
         let mut out_file = File::create(out_path).expect("failed to create labels binary");
         for &a in &assigns {
             let label_i64 = a as i64;
@@ -108,9 +92,7 @@ fn main() {
     println!("  \"dataset\": \"{csv_path}\",");
     println!("  \"n\": {n},");
     println!("  \"d\": {d},");
-    println!("  \"min_time\": {min_time:.6},");
-    println!("  \"mean_time\": {mean_time:.6},");
-    println!("  \"times\": {:?},", times);
+    println!("  \"elapsed_time\": {elapsed:.6},");
     println!("  \"nclusters\": {k_found},");
     println!("  \"counts\": {:?},", counts);
     println!("  \"nmi\": {nmi:.4}");
