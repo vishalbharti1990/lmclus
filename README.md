@@ -5,7 +5,7 @@
 
 A high-performance Rust package for **Linear Manifold Clustering (LMCLUS)**, converted from the Julia [`LMCLUS.jl`](https://github.com/wildart/LMCLUS.jl) library.
 
-LMCLUS detects linear manifold clusters of differing dimensions, orientations, and densities embedded in high-dimensional noisy data. This engine achieves **10x to 58x speedups** over Python (`lmclus`) and **4x to 21x speedups** over Julia (`LMCLUS.jl`) while maintaining 100% mathematical clustering accuracy parity ($\text{NMI} = 1.0000$).
+LMCLUS detects linear manifold clusters of differing dimensions, orientations, and densities embedded in high-dimensional noisy data. This engine achieves **10x to 58x speedups** over Python (`lmclus`) and **4x to 21x speedups** over Julia (`LMCLUS.jl`) while maintaining 100% mathematical clustering accuracy parity (NMI = 1.0000).
 
 ---
 
@@ -24,18 +24,18 @@ LMCLUS detects linear manifold clusters of differing dimensions, orientations, a
 
 Measured on Apple Silicon (M1 Max / M-series, 10 cores) across standard scaling experiments:
 
-| Sample Size ($n$) | Features ($d$) | Python (`lmclus`) | Julia (`LMCLUS.jl`) | **Rust (`lmclus`)** | **Rust Speedup vs. Py** | **Rust Speedup vs. Jl** | Parity (NMI) |
+| Sample Size (n) | Features (d) | Python (`lmclus`) | Julia (`LMCLUS.jl`) | **Rust (`lmclus`)** | **Rust Speedup vs. Py** | **Rust Speedup vs. Jl** | Parity (NMI) |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **$n = 1,000$** | $10$ | $3.25\text{ ms}$ | $3.30\text{ ms}$ | **$0.74\text{ ms}$** | **$4.4\times$** | **$4.5\times$** | $\text{Parity}$ |
-| **$n = 2,500$** | $10$ | $15.94\text{ ms}$ | $18.60\text{ ms}$ | **$1.31\text{ ms}$** | **$12.2\times$** | **$14.2\times$** | **$1.0000$** |
-| **$n = 5,000$** | $10$ | $59.56\text{ ms}$ | $28.01\text{ ms}$ | **$2.67\text{ ms}$** | **$22.3\times$** | **$10.5\times$** | **$1.0000$** |
-| **$n = 10,000$** | $10$ | $230.15\text{ ms}$ | $95.53\text{ ms}$ | **$5.92\text{ ms}$** | **$38.9\times$** | **$16.1\times$** | **$1.0000$** |
-| **$n = 20,000$** | $10$ | $904.13\text{ ms}$ | $328.08\text{ ms}$ | **$15.52\text{ ms}$** | **$58.2\times$** | **$21.1\times$** | **$1.0000$** |
+| **n = 1,000** | 10 | 3.25 ms | 3.30 ms | **0.74 ms** | **4.4x** | **4.5x** | Parity |
+| **n = 2,500** | 10 | 15.94 ms | 18.60 ms | **1.31 ms** | **12.2x** | **14.2x** | 1.0000 |
+| **n = 5,000** | 10 | 59.56 ms | 28.01 ms | **2.67 ms** | **22.3x** | **10.5x** | 1.0000 |
+| **n = 10,000** | 10 | 230.15 ms | 95.53 ms | **5.92 ms** | **38.9x** | **16.1x** | 1.0000 |
+| **n = 20,000** | 10 | 904.13 ms | 328.08 ms | **15.52 ms** | **58.2x** | **21.1x** | 1.0000 |
 
-*Canonical testData fixture ($n=3,000, d=10$):*
-- **Python**: $23.7\text{ ms}$
-- **Julia**: $24.0\text{ ms}$
-- **Rust**: **$2.09\text{ ms}$** (**$11.3\times$ faster**)
+*Canonical testData fixture (n = 3,000, d = 10):*
+- **Python**: 23.7 ms
+- **Julia**: 24.0 ms
+- **Rust**: **2.09 ms** (**11.3x faster**)
 
 ---
 
