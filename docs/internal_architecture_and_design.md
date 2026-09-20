@@ -29,7 +29,13 @@ src/
 ├── pca.rs            # SVD basis alignment & dimension adjustment via `faer`
 ├── cluster.rs        # Recursive manifold search state machine & outlier management
 └── bin/
-    └── lmclus.rs     # CLI tool producing structured JSON telemetry for benchmarks
+    └── lmclus.rs     # CLI tool with --has-labels, telemetry, and NMI/ARI/Purity metrics
+tests/
+├── integration_test.rs # End-to-end integration and mathematical sanity tests
+└── data/
+    └── sample_labeled.csv # 300-point 3-cluster labeled test benchmark
+examples/
+└── microbench.rs     # Micro-benchmarks for distance, histogram, and trial search kernels
 ```
 
 ### 1.3 Data Flow & Component Interaction
@@ -179,8 +185,8 @@ authors = ["Vishal Bharti"]
 description = "High-performance Linear Manifold Clustering (LMCLUS) engine in Rust"
 readme = "README.md"
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/vishalbharti/lmclus"
-keywords = ["clustering", "manifold-learning", "unsupervised-learning", "subspace", "pca"]
+repository = "https://github.com/vishalbharti1990/lmclus"
+keywords = ["clustering", "manifold-learning", "unsupervised", "subspace", "pca"]
 categories = ["algorithms", "science", "mathematics"]
 exclude = [
     "/docs",

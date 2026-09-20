@@ -91,10 +91,10 @@ cargo build --release --bin lmclus
 cargo run --release --bin lmclus -- dataset.csv 2 4 42
 
 # For benchmark datasets where the last column has ground-truth labels:
-cargo run --release --bin lmclus -- --has-labels benchmark.csv 2 4 42
+cargo run --release --bin lmclus -- --has-labels tests/data/sample_labeled.csv 2 3 42
 ```
 
-Outputs JSON telemetry:
+Outputs JSON telemetry (with unlabelled data):
 ```json
 {
   "dataset": "dataset.csv",
@@ -105,7 +105,21 @@ Outputs JSON telemetry:
   "counts": [6667, 6667, 6666]
 }
 ```
-*(When `--has-labels` is passed, `"nmi"`, `"ari"`, and `"purity"` are automatically computed and included in the output).*
+
+When `--has-labels` is passed, external clustering metrics (`nmi`, `ari`, and `purity`) are automatically computed:
+```json
+{
+  "dataset": "tests/data/sample_labeled.csv",
+  "n": 300,
+  "d": 5,
+  "elapsed_time": 0.000932,
+  "nclusters": 3,
+  "counts": [100, 100, 100],
+  "nmi": 1.0000,
+  "ari": 1.0000,
+  "purity": 1.0000
+}
+```
 
 ---
 
