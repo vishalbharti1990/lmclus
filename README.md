@@ -3,7 +3,7 @@
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/License-MIT%20OR%20Apache--2.0-blue.svg)](LICENSE)
 [![Rust](https://img.shields.io/badge/rust-2024%20edition-orange.svg)](https://www.rust-lang.org)
 
-A blazing-fast, zero-allocation Rust implementation of the **Linear Manifold Clustering (LMCLUS)** algorithm.
+A high-performance Rust package for **Linear Manifold Clustering (LMCLUS)**, converted from the Julia [`LMCLUS.jl`](https://github.com/wildart/LMCLUS.jl) library.
 
 LMCLUS detects linear manifold clusters of differing dimensions, orientations, and densities embedded in high-dimensional noisy data. This engine achieves **10x to 58x speedups** over Python (`lmclus`) and **4x to 21x speedups** over Julia (`LMCLUS.jl`) while maintaining 100% mathematical clustering accuracy parity ($\text{NMI} = 1.0000$).
 
@@ -130,6 +130,15 @@ Run micro-benchmarks:
 ```bash
 cargo run --release --example microbench
 ```
+
+---
+
+## References
+
+1. Haralick, R. & Harpaz, R., *"Linear manifold clustering in high dimensional spaces by stochastic search"*, Pattern Recognition, Elsevier, 2007, 40, 2672-2684. [DOI: 10.1016/j.patcog.2007.01.020](http://dx.doi.org/10.1016/j.patcog.2007.01.020)
+2. Haralick et al., *"Inexact MDL for Linear Manifold Clusters"*, ICPR-2016. [DOI: 10.1109/ICPR.2016.7899824](http://dx.doi.org/10.1109/ICPR.2016.7899824)
+3. Kittler, J. & Illingworth, J., *"Minimum Error Thresholding"*, Pattern Recognition, Vol 19, nr 1, 1986, pp. 41-47. [DOI: 10.1016/0031-3203(86)90030-0](http://dx.doi.org/10.1016/0031-3203(86)90030-0)
+4. Otsu, N., *"A threshold selection method from gray-level histograms"*, Automatica, 1975, 11, 285-296. [DOI: 10.1109/TSMC.1979.4310076](http://dx.doi.org/10.1109/TSMC.1979.4310076)
 
 ---
 
