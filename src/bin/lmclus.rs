@@ -49,8 +49,9 @@ ARGUMENTS:
 OPTIONS:
     -l, --has-labels
         Specify that the last column in the CSV contains ground-truth integer labels.
-        When set, the last column is excluded from features and used to calculate
-        Normalized Mutual Information (NMI). Default: false (all columns are features).
+        When set, the last column is excluded from features, and external validation
+        metrics (NMI, ARI, and Purity) are calculated and reported in the output.
+        Default: false (all columns are features).
 
     -h, --help
         Print this detailed help guide and exit.
@@ -210,17 +211,31 @@ fn main() {
     println!("  \"nclusters\": {k_found},");
     println!("  \"counts\": {:?},", counts);
     if has_labels {
-        let nmi = compute_nmi(&ground_truth, &assigns);
-        println!("  \"nmi\": {nmi:.4}");
+        let m = compute_metrics(&ground_truth, &assigns);
+        println!("  \"nmi\": {:.4},", m.nmi);
+        println!("  \"ari\": {:.4},", m.ari);
+        println!("  \"purity\": {:.4}", m.purity);
     } else {
-        println!("  \"nmi\": null");
+        println!("  \"nmi\": null,");
+        println!("  \"ari\": null,");
+        println!("  \"purity\": null");
     }
     println!("}}");
 }
 
-fn compute_nmi(y_true: &[i64], y_pred: &[usize]) -> f64 {
+struct ClusterMetrics {
+    nmi: f64,
+    ari: f64,
+    purity: f64,
+}
+
+fn compute_metrics(y_true: &[i64], y_pred: &[usize]) -> ClusterMetrics {
     use std::collections::{HashMap, HashSet};
     let n = y_true.len() as f64;
+    if n == 0.0 {
+        return ClusterMetrics { nmi: 0.0, ari: 0.0, purity: 0.0 };
+    }
+
     let mut class_map = HashMap::new();
     let mut cluster_map = HashMap::new();
     let mut contingency: HashMap<(usize, usize), f64> = HashMap::new();
@@ -251,6 +266,7 @@ fn compute_nmi(y_true: &[i64], y_pred: &[usize]) -> f64 {
         col_sums[c] += 1.0;
     }
 
+    // 1. Normalized Mutual Information (NMI)
     let mut h_true = 0.0;
     for &rs in &row_sums {
         let p = rs / n;
@@ -263,20 +279,65 @@ fn compute_nmi(y_true: &[i64], y_pred: &[usize]) -> f64 {
         if p > 0.0 { h_pred -= p * p.ln(); }
     }
 
-    if h_true + h_pred == 0.0 {
-        return 1.0;
+    let nmi = if h_true + h_pred == 0.0 {
+        1.0
+    } else {
+        let mut mi = 0.0;
+        for (&(r, c), &cnt) in &contingency {
+            let p_joint = cnt / n;
+            let p_r = row_sums[r] / n;
+            let p_c = col_sums[c] / n;
+            if p_joint > 0.0 {
+                mi += p_joint * (p_joint / (p_r * p_c)).ln();
+            }
+        }
+        (2.0 * mi / (h_true + h_pred)).clamp(0.0, 1.0)
+    };
+
+    // 2. Adjusted Rand Index (ARI)
+    let choose2 = |x: f64| -> f64 {
+        if x < 2.0 { 0.0 } else { x * (x - 1.0) * 0.5 }
+    };
+
+    let mut sum_comb_contingency = 0.0;
+    for &cnt in contingency.values() {
+        sum_comb_contingency += choose2(cnt);
     }
 
-    let mut mi = 0.0;
-    for (&(r, c), &cnt) in &contingency {
-        let p_joint = cnt / n;
-        let p_r = row_sums[r] / n;
-        let p_c = col_sums[c] / n;
-        if p_joint > 0.0 {
-            mi += p_joint * (p_joint / (p_r * p_c)).ln();
+    let mut sum_comb_rows = 0.0;
+    for &rs in &row_sums {
+        sum_comb_rows += choose2(rs);
+    }
+
+    let mut sum_comb_cols = 0.0;
+    for &cs in &col_sums {
+        sum_comb_cols += choose2(cs);
+    }
+
+    let total_comb = choose2(n);
+    let expected_index = if total_comb > 0.0 {
+        (sum_comb_rows * sum_comb_cols) / total_comb
+    } else {
+        0.0
+    };
+    let max_index = 0.5 * (sum_comb_rows + sum_comb_cols);
+    let denom = max_index - expected_index;
+
+    let ari = if denom.abs() < 1e-12 {
+        if (sum_comb_contingency - expected_index).abs() < 1e-12 { 1.0 } else { 0.0 }
+    } else {
+        ((sum_comb_contingency - expected_index) / denom).clamp(-1.0, 1.0)
+    };
+
+    // 3. Purity: (sum_c max_r n_{rc}) / n
+    let mut cluster_max_counts = vec![0.0; num_clusters];
+    for (&(_r, c), &cnt) in &contingency {
+        if cnt > cluster_max_counts[c] {
+            cluster_max_counts[c] = cnt;
         }
     }
+    let purity = (cluster_max_counts.iter().sum::<f64>() / n).clamp(0.0, 1.0);
 
-    (2.0 * mi / (h_true + h_pred)).clamp(0.0, 1.0)
+    ClusterMetrics { nmi, ari, purity }
 }
 

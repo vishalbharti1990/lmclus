@@ -103,10 +103,12 @@ Outputs JSON telemetry:
   "elapsed_time": 0.0155,
   "nclusters": 3,
   "counts": [6667, 6667, 6666],
-  "nmi": null
+  "nmi": null,
+  "ari": null,
+  "purity": null
 }
 ```
-*(When `--has-labels` is passed, `"nmi"` will contain the calculated Normalized Mutual Information score).*
+*(When `--has-labels` is passed, `"nmi"`, `"ari"`, and `"purity"` will report the respective external validation scores).*
 
 ---
 
