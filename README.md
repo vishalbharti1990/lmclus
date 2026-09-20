@@ -87,8 +87,11 @@ Run the included high-performance CLI directly on CSV files:
 # Build optimized release binary
 cargo build --release --bin lmclus
 
-# Usage: lmclus <csv_path> <max_dim> [k_nominal] [seed] [out_labels_bin]
+# Usage: lmclus [OPTIONS] <csv_path> <max_dim> [k_nominal] [seed] [out_labels_bin]
 cargo run --release --bin lmclus -- dataset.csv 2 4 42
+
+# For benchmark datasets where the last column has ground-truth labels:
+cargo run --release --bin lmclus -- --has-labels benchmark.csv 2 4 42
 ```
 
 Outputs JSON telemetry:
@@ -100,9 +103,10 @@ Outputs JSON telemetry:
   "elapsed_time": 0.0155,
   "nclusters": 3,
   "counts": [6667, 6667, 6666],
-  "nmi": 1.0000
+  "nmi": null
 }
 ```
+*(When `--has-labels` is passed, `"nmi"` will contain the calculated Normalized Mutual Information score).*
 
 ---
 

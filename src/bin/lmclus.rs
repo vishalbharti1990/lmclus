@@ -10,7 +10,7 @@ fn print_help() {
     println!(r#"Linear Manifold Clustering (LMCLUS) Engine
 
 USAGE:
-    lmclus <csv_path> <max_dim> [k_nominal] [seed] [out_labels_bin]
+    lmclus [OPTIONS] <csv_path> <max_dim> [k_nominal] [seed] [out_labels_bin]
     lmclus --help | -h
     lmclus --version | -v
 
@@ -18,11 +18,10 @@ ARGUMENTS:
     <csv_path>
         Path to the input CSV file containing data points.
         Format: Each line represents a point with comma-separated feature values.
-        If the last column contains integer labels, it is used as ground-truth
-        for calculating Normalized Mutual Information (NMI).
+        By default, ALL columns are treated as feature dimensions.
 
     <max_dim>
-        Maximum subspace manifold dimension to search (must be >= 1 and < d).
+        Maximum subspace manifold dimension to search (must be >= 1 and < feature dimension d).
         For example:
           1: search for 1D lines
           2: search for 1D lines and 2D planes
@@ -48,6 +47,11 @@ ARGUMENTS:
             reinterpret(Int64, read("labels.bin"))
 
 OPTIONS:
+    -l, --has-labels
+        Specify that the last column in the CSV contains ground-truth integer labels.
+        When set, the last column is excluded from features and used to calculate
+        Normalized Mutual Information (NMI). Default: false (all columns are features).
+
     -h, --help
         Print this detailed help guide and exit.
 
@@ -55,8 +59,11 @@ OPTIONS:
         Print version information and exit.
 
 EXAMPLES:
-    # Cluster points with maximum manifold dimension of 2:
+    # Cluster unlabelled data (all CSV columns are features):
     lmclus data.csv 2
+
+    # Cluster benchmark data where the last column has ground-truth labels:
+    lmclus --has-labels benchmark.csv 4
 
     # Cluster expecting ~5 clusters, using random seed 1234:
     lmclus data.csv 3 5 1234
@@ -67,42 +74,52 @@ EXAMPLES:
 }
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
+    let mut has_labels = false;
+    let mut positional: Vec<String> = Vec::new();
 
-    if args.iter().any(|arg| arg == "--help" || arg == "-h") {
-        print_help();
-        return;
+    for arg in env::args().skip(1) {
+        match arg.as_str() {
+            "--help" | "-h" => {
+                print_help();
+                return;
+            }
+            "--version" | "-v" => {
+                println!("lmclus {}", env!("CARGO_PKG_VERSION"));
+                return;
+            }
+            "--has-labels" | "--labels" | "-l" => {
+                has_labels = true;
+            }
+            _ => {
+                positional.push(arg);
+            }
+        }
     }
 
-    if args.iter().any(|arg| arg == "--version" || arg == "-v") {
-        println!("lmclus {}", env!("CARGO_PKG_VERSION"));
-        return;
-    }
-
-    if args.len() < 3 {
+    if positional.len() < 2 {
         print_help();
         std::process::exit(1);
     }
 
-    let csv_path = &args[1];
-    let max_dim: usize = match args[2].parse() {
+    let csv_path = &positional[0];
+    let max_dim: usize = match positional[1].parse() {
         Ok(m) if m > 0 => m,
         _ => {
-            eprintln!("Error: <max_dim> must be a positive integer (got '{}')", args[2]);
+            eprintln!("Error: <max_dim> must be a positive integer (got '{}')", positional[1]);
             std::process::exit(1);
         }
     };
-    let k_nominal: usize = if args.len() >= 4 {
-        args[3].parse().unwrap_or(4)
+    let k_nominal: usize = if positional.len() >= 3 {
+        positional[2].parse().unwrap_or(4)
     } else {
         4
     };
-    let seed: u64 = if args.len() >= 5 {
-        args[4].parse().unwrap_or(42)
+    let seed: u64 = if positional.len() >= 4 {
+        positional[3].parse().unwrap_or(42)
     } else {
         42
     };
-    let out_bin = if args.len() >= 6 { Some(&args[5]) } else { None };
+    let out_bin = if positional.len() >= 5 { Some(&positional[4]) } else { None };
 
     if !Path::new(csv_path).exists() {
         eprintln!("Error: CSV file not found: {csv_path}");
@@ -123,16 +140,28 @@ fn main() {
             continue;
         }
         let parts: Vec<&str> = line.split(',').collect();
-        if parts.len() < 2 {
+        if parts.is_empty() {
             continue;
         }
-        let label: i64 = parts.last().unwrap().trim().parse::<f64>().unwrap_or(0.0) as i64;
-        let feats: Vec<f64> = parts[..parts.len() - 1]
-            .iter()
-            .map(|s| s.trim().parse::<f64>().unwrap_or(0.0))
-            .collect();
-        ground_truth.push(label);
-        rows.push(feats);
+
+        if has_labels {
+            if parts.len() < 2 {
+                continue;
+            }
+            let label: i64 = parts.last().unwrap().trim().parse::<f64>().unwrap_or(0.0) as i64;
+            let feats: Vec<f64> = parts[..parts.len() - 1]
+                .iter()
+                .map(|s| s.trim().parse::<f64>().unwrap_or(0.0))
+                .collect();
+            ground_truth.push(label);
+            rows.push(feats);
+        } else {
+            let feats: Vec<f64> = parts
+                .iter()
+                .map(|s| s.trim().parse::<f64>().unwrap_or(0.0))
+                .collect();
+            rows.push(feats);
+        }
     }
 
     let n = rows.len();
@@ -163,7 +192,6 @@ fn main() {
     let counts = res.counts();
 
     let assigns = res.assignments(n);
-    let nmi = compute_nmi(&ground_truth, &assigns);
 
     // 5. Output assignments if requested
     if let Some(out_path) = out_bin {
@@ -181,7 +209,12 @@ fn main() {
     println!("  \"elapsed_time\": {elapsed:.6},");
     println!("  \"nclusters\": {k_found},");
     println!("  \"counts\": {:?},", counts);
-    println!("  \"nmi\": {nmi:.4}");
+    if has_labels {
+        let nmi = compute_nmi(&ground_truth, &assigns);
+        println!("  \"nmi\": {nmi:.4}");
+    } else {
+        println!("  \"nmi\": null");
+    }
     println!("}}");
 }
 
