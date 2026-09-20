@@ -26,7 +26,7 @@ Measured on Apple Silicon (M1 Max / M-series, 10 cores) across standard scaling 
 
 | Sample Size (n) | Features (d) | Python (`lmclus`) | Julia (`LMCLUS.jl`) | **Rust (`lmclus`)** | **Rust Speedup vs. Py** | **Rust Speedup vs. Jl** | Parity (NMI) |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **n = 1,000** | 10 | 3.25 ms | 3.30 ms | **0.74 ms** | **4.4x** | **4.5x** | Parity |
+| **n = 1,000** | 10 | 3.25 ms | 3.30 ms | **0.74 ms** | **4.4x** | **4.5x** | 1.0000 |
 | **n = 2,500** | 10 | 15.94 ms | 18.60 ms | **1.31 ms** | **12.2x** | **14.2x** | 1.0000 |
 | **n = 5,000** | 10 | 59.56 ms | 28.01 ms | **2.67 ms** | **22.3x** | **10.5x** | 1.0000 |
 | **n = 10,000** | 10 | 230.15 ms | 95.53 ms | **5.92 ms** | **38.9x** | **16.1x** | 1.0000 |
