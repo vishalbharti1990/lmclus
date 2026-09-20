@@ -87,7 +87,7 @@ fn test_synthetic_two_clusters() {
 
 #[test]
 fn test_labeled_csv_dataset() {
-    let csv_content = include_str!("../data/sample_labeled.csv");
+    let csv_content = include_str!("data/sample_labeled.csv");
     let mut rows: Vec<Vec<f64>> = Vec::new();
     let mut ground_truth: Vec<i64> = Vec::new();
 
